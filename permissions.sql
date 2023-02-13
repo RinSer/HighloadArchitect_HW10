@@ -1,0 +1,3 @@
+GRANT ALL ON *.* to flask@'192.168.0.1' IDENTIFIED BY 'ksalf';
+FLUSH PRIVILEGES;
+CREATE DATABASE social_network;

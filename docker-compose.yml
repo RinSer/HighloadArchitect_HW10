@@ -1,0 +1,76 @@
+version: "3"
+services:
+  redis:
+    image: bitnami/redis:latest
+    ports:
+      - 7000:7000
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - REDIS_PORT_NUMBER=7000
+    volumes:
+      - ./redis-persistence:/bitnami/redis/data
+
+  rabbitmq:
+    image: bitnami/rabbitmq:latest
+    ports:
+      - 5672:5672
+    environment:
+      - RABBITMQ_USERNAME=test
+      - RABBITMQ_PASSWORD=test
+
+  mysql1:
+    build:
+      dockerfile: ./galera.Dockerfile
+      args:
+          cnf: ./node1.cnf
+    ports:
+      - 3301:3306
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: social_network
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+
+  mysql2:
+    build:
+      dockerfile: ./galera.Dockerfile
+      args:
+          cnf: ./slave/node2.cnf
+    ports:
+      - 3302:3306
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: social_network
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+  mysql3:
+    build:
+      dockerfile: ./galera.Dockerfile
+      args:
+          cnf: ./slave/node3.cnf
+    ports:
+      - 3303:3306
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: toor
+      MYSQL_DATABASE: social_network
+      MYSQL_USER: test
+      MYSQL_PASSWORD: test
+
+  haproxy:
+    image: haproxytech/haproxy-ubuntu:latest
+    container_name: haproxy
+    restart: unless-stopped
+    ports: 
+      - 2999:2999
+      - 3306:3306
+    cap_add:
+      - all
+    volumes:
+      - ./haproxy.cfg:/etc/haproxy/haproxy.cfg
+    depends_on:
+      - mysql1
+      - mysql2
+      - mysql3
